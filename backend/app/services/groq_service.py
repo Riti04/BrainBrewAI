@@ -10,6 +10,8 @@ class GroqService:
 
     def __init__(self):
 
+        print("GROQ KEY:", os.getenv("GROQ_API_KEY"))
+
         self.client = Groq(
             api_key=os.getenv(
                 "GROQ_API_KEY"
