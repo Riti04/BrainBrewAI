@@ -16,7 +16,8 @@ class GroqService:
             api_key=api_key
         )
 
-        self.model = "llama3-8b-8192"
+        self.model = "llama-3.1-8b-instant"
+
 
     def generate_response(
         self,

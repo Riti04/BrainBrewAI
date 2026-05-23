@@ -1,34 +1,33 @@
 package com.example.brainbrewai.data.repository
 
+import com.example.brainbrewai.data.model.ChatMessage
 import com.example.brainbrewai.data.remote.ChatRequest
 import com.example.brainbrewai.data.remote.RetrofitInstance
 
 class ChatRepository {
 
-    suspend fun askAI(
+    suspend fun sendMessage(
         message: String
     ): String {
 
         return try {
 
             val response =
-                RetrofitInstance.api.askAi(
+                RetrofitInstance.api.chatWithAI(
                     ChatRequest(message)
                 )
 
             if (response.isSuccessful) {
 
                 response.body()?.response
-                    ?: "Empty AI response"
+                    ?: "Empty response from AI"
 
             } else {
 
-                "Error: ${response.code()}"
+                "Server Error: ${response.code()}"
             }
 
         } catch (e: Exception) {
-
-            e.printStackTrace()
 
             "Error: ${e.message}"
         }

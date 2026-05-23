@@ -1,77 +1,93 @@
 package com.example.brainbrewai.presentation.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.brainbrewai.data.model.ChatMessage
-import com.example.brainbrewai.data.repository.ChatRepository
+import com.example.brainbrewai.data.remote.ChatRequest
+import com.example.brainbrewai.data.remote.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ChatViewModel : ViewModel() {
 
-    private val repository = ChatRepository()
-
     private val _messages =
         MutableStateFlow<List<ChatMessage>>(emptyList())
 
-    val messages: StateFlow<List<ChatMessage>> = _messages
+    val messages: StateFlow<List<ChatMessage>>
+            = _messages
 
     private val _isLoading =
         MutableStateFlow(false)
 
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean>
+            = _isLoading
 
-    fun sendMessage(userMessage: String) {
+    fun sendMessage(message: String) {
 
-        if (userMessage.isBlank()) return
+        if (message.isBlank()) return
 
-        val updatedMessages =
-            _messages.value.toMutableList()
-
-        updatedMessages.add(
-            ChatMessage(
-                message = userMessage,
-                isUser = true
-            )
+        val userMessage = ChatMessage(
+            text = message,
+            isUser = true
         )
 
-        _messages.value = updatedMessages
+        _messages.value =
+            _messages.value + userMessage
 
         viewModelScope.launch {
 
-            _isLoading.value = true
-
             try {
 
-                val aiReply =
-                    repository.askAI(userMessage)
+                _isLoading.value = true
 
-                val aiMessages =
-                    _messages.value.toMutableList()
+                val response =
+                    RetrofitInstance.api.chatWithAI(
+                        ChatRequest(message)
+                    )
 
-                aiMessages.add(
-                    ChatMessage(
-                        message = aiReply,
+                if (response.isSuccessful) {
+
+                    val body = response.body()
+
+                    val aiText =
+                        body?.response
+                            ?: "No response from AI"
+
+                    val aiMessage = ChatMessage(
+                        text = aiText,
                         isUser = false
                     )
-                )
 
-                _messages.value = aiMessages
+                    _messages.value =
+                        _messages.value + aiMessage
+
+                } else {
+
+                    val errorMessage = ChatMessage(
+                        text = "Server Error: ${response.code()}",
+                        isUser = false
+                    )
+
+                    _messages.value =
+                        _messages.value + errorMessage
+                }
 
             } catch (e: Exception) {
 
-                val errorMessages =
-                    _messages.value.toMutableList()
-
-                errorMessages.add(
-                    ChatMessage(
-                        message = "Error: ${e.message}",
-                        isUser = false
-                    )
+                Log.e(
+                    "CHAT_ERROR",
+                    e.toString()
                 )
 
-                _messages.value = errorMessages
+                val errorMessage = ChatMessage(
+                    text = "Error: ${e.localizedMessage}",
+                    isUser = false
+                )
+
+                _messages.value =
+                    _messages.value + errorMessage
 
             } finally {
 
