@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.tasks.await
+
 class AuthViewModel : ViewModel() {
 
     private val repository = AuthRepository()
@@ -31,65 +33,10 @@ class AuthViewModel : ViewModel() {
                 AuthUiState(isLoading = true)
 
             val result =
-                repository.login(email, password)
-
-            _uiState.value =
-
-                if (result.isSuccess) {
-
-                    AuthUiState(
-                        isSuccess = true
-                    )
-
-                } else {
-
-                    AuthUiState(
-                        error = result.exceptionOrNull()?.message
-                    )
-                }
-        }
-    }
-
-    fun register(
-        email: String,
-        password: String
-    ) {
-
-        viewModelScope.launch {
-
-            _uiState.value =
-                AuthUiState(isLoading = true)
-
-            val result =
-                repository.register(email, password)
-
-            _uiState.value =
-
-                if (result.isSuccess) {
-
-                    AuthUiState(
-                        isSuccess = true
-                    )
-
-                } else {
-
-                    AuthUiState(
-                        error = result.exceptionOrNull()?.message
-                    )
-                }
-        }
-    }
-    fun resetPassword(
-        email: String
-    ) {
-
-        viewModelScope.launch {
-
-            _uiState.value =
-                AuthUiState(isLoading = true)
-
-            val result =
-                repository.resetPassword(email)
+                repository.login(
+                    email,
+                    password
+                )
 
             _uiState.value =
 
@@ -108,6 +55,88 @@ class AuthViewModel : ViewModel() {
                 }
         }
     }
+
+    fun register(
+        name: String,
+        email: String,
+        password: String
+    ) {
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                AuthUiState(isLoading = true)
+
+            val result =
+                repository.register(
+                    email,
+                    password
+                )
+
+            if (result.isSuccess) {
+
+                FirebaseAuth
+                    .getInstance()
+                    .currentUser
+                    ?.updateProfile(
+
+                        UserProfileChangeRequest
+                            .Builder()
+                            .setDisplayName(name)
+                            .build()
+                    )
+                    ?.await()
+
+                _uiState.value =
+                    AuthUiState(
+                        isSuccess = true
+                    )
+
+            } else {
+
+                _uiState.value =
+                    AuthUiState(
+                        error =
+                            result.exceptionOrNull()?.message
+                    )
+            }
+        }
+    }
+
+    fun resetPassword(
+        email: String
+    ) {
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                AuthUiState(
+                    isLoading = true
+                )
+
+            val result =
+                repository.resetPassword(
+                    email
+                )
+
+            _uiState.value =
+
+                if (result.isSuccess) {
+
+                    AuthUiState(
+                        isSuccess = true
+                    )
+
+                } else {
+
+                    AuthUiState(
+                        error =
+                            result.exceptionOrNull()?.message
+                    )
+                }
+        }
+    }
+
     fun googleSignIn(
         idToken: String
     ) {
@@ -144,8 +173,7 @@ class AuthViewModel : ViewModel() {
 
                 _uiState.value =
                     AuthUiState(
-                        error =
-                            e.message
+                        error = e.message
                     )
             }
         }

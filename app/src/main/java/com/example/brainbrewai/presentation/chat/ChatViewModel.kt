@@ -6,11 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.brainbrewai.data.model.ChatMessage
 import com.example.brainbrewai.data.remote.ChatRequest
 import com.example.brainbrewai.data.remote.RetrofitInstance
+import com.example.brainbrewai.data.repository.HistoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ChatViewModel : ViewModel() {
+
+    private val historyRepository =
+        HistoryRepository()
 
     private val _messages =
         MutableStateFlow<List<ChatMessage>>(emptyList())
@@ -49,10 +53,8 @@ class ChatViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
 
-                    val body = response.body()
-
                     val aiText =
-                        body?.response
+                        response.body()?.response
                             ?: "No response from AI"
 
                     val aiMessage = ChatMessage(
@@ -63,31 +65,30 @@ class ChatViewModel : ViewModel() {
                     _messages.value =
                         _messages.value + aiMessage
 
-                } else {
-
-                    val errorMessage = ChatMessage(
-                        text = "Server Error: ${response.code()}",
-                        isUser = false
+                    historyRepository.saveHistory(
+                        title = message,
+                        content = aiText,
+                        type = "askAi"
                     )
 
+                } else {
+
                     _messages.value =
-                        _messages.value + errorMessage
+                        _messages.value + ChatMessage(
+                            text = "Server Error: ${response.code()}",
+                            isUser = false
+                        )
                 }
 
             } catch (e: Exception) {
 
-                Log.e(
-                    "CHAT_ERROR",
-                    e.toString()
-                )
-
-                val errorMessage = ChatMessage(
-                    text = "Error: ${e.localizedMessage}",
-                    isUser = false
-                )
+                Log.e("CHAT_ERROR", e.toString())
 
                 _messages.value =
-                    _messages.value + errorMessage
+                    _messages.value + ChatMessage(
+                        text = "Error: ${e.localizedMessage}",
+                        isUser = false
+                    )
 
             } finally {
 

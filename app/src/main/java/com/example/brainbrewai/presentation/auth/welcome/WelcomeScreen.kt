@@ -1,111 +1,92 @@
 package com.example.brainbrewai.presentation.auth.welcome
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.brainbrewai.core.components.AuthCard
-import com.example.brainbrewai.core.components.GradientBackground
 import com.example.brainbrewai.navigation.Screen
+import com.example.brainbrewai.ui.theme.*
 
 @Composable
 fun WelcomeScreen(
     navController: NavController
 ) {
 
-    GradientBackground {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PurpleGradient)
+    ) {
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-
-            verticalArrangement =
-                Arrangement.Center,
-
-            horizontalAlignment =
-                Alignment.CenterHorizontally
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+                .align(Alignment.Center),
+            shape = CardRadius
         ) {
 
-            Icon(
-                imageVector =
-                    Icons.Default.AutoAwesome,
+            Column(
+                modifier = Modifier.padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-                contentDescription = null,
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = PrimaryPurple,
+                    modifier = Modifier.size(72.dp)
+                )
 
-                tint =
-                    MaterialTheme.colorScheme.primary,
+                Spacer(modifier = Modifier.height(16.dp))
 
-                modifier =
-                    Modifier.size(72.dp)
-            )
+                Text(
+                    "BrainBrew AI",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "BrainBrew AI",
+                Text(
+                    "Your AI-powered study companion"
+                )
 
-                style =
-                    MaterialTheme.typography.headlineLarge,
-
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text =
-                    "Your Multi-Agent Study Assistant",
-
-                style =
-                    MaterialTheme.typography.bodyLarge
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            AuthCard {
+                Spacer(modifier = Modifier.height(28.dp))
 
                 Button(
                     onClick = {
-
-                        navController.navigate(
-                            Screen.Login.route
-                        )
+                        navController.navigate(Screen.Login.route)
                     },
-
-                    modifier =
-                        Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = InputRadius,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryPurple
+                    )
                 ) {
-
                     Text("Login")
                 }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(16.dp)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
                     onClick = {
-
-                        navController.navigate(
-                            Screen.Register.route
-                        )
+                        navController.navigate(Screen.Register.route)
                     },
-
-                    modifier =
-                        Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = InputRadius
                 ) {
-
-                    Text("Create Account")
+                    Text(
+                        "Create Account",
+                        color = PrimaryPurple
+                    )
                 }
             }
         }

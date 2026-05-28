@@ -14,6 +14,14 @@ sealed class Screen(
 
     data object Dashboard : Screen("dashboard")
 
-    object Chat : Screen("chat")
+    data object Chat : Screen("chat")
+
+    data object ForgotPassword : Screen("forgot_password")
+    data object Study : Screen("study")
+    data object Profile : Screen("profile")
+    data object UploadNotes: Screen("upload_notes")
+    data object GenerateQuiz: Screen("generate_quiz")
+    data object StudyPlanner: Screen("study_planner")
 
 }
+
