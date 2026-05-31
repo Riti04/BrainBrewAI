@@ -191,6 +191,9 @@ fun DashboardScreen(
                                 }
 
                                 "Voice Notes" -> {
+                                    navController.navigate(
+                                        Screen.VoiceNotes.route
+                                    )
                                 }
                             }
                         }

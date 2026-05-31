@@ -22,6 +22,7 @@ fun HistoryCard(
         "summary" -> "📄 Upload Notes"
         "quiz" -> "📝 Quiz"
         "studyPlan" -> "📚 Study Plan"
+        "voiceNote" -> "🎤 Voice Note"
         else -> "📌 History"
     }
 

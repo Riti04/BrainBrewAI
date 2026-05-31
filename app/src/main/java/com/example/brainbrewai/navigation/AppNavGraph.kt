@@ -18,6 +18,7 @@ import com.example.brainbrewai.presentation.study.StudyScreen
 import com.example.brainbrewai.presentation.studyplanner.StudyPlannerScreen
 
 import com.example.brainbrewai.presentation.uploadnotes.UploadNotesScreen
+import com.example.brainbrewai.presentation.voicenotes.VoiceNotesScreen
 
 @Composable
 fun AppNavGraph() {
@@ -102,6 +103,10 @@ fun AppNavGraph() {
         ) {
             StudyPlannerScreen(navController)
         }
+        composable(
+            Screen.VoiceNotes.route
+        ) {
+            VoiceNotesScreen(navController)
+        }
     }
-
 }

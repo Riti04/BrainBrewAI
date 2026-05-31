@@ -22,6 +22,7 @@ sealed class Screen(
     data object UploadNotes: Screen("upload_notes")
     data object GenerateQuiz: Screen("generate_quiz")
     data object StudyPlanner: Screen("study_planner")
+    data object VoiceNotes: Screen("voice_notes")
 
 }
 
