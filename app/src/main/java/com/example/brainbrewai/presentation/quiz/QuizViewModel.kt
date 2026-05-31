@@ -5,27 +5,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.brainbrewai.core.utils.QuizParser
 import com.example.brainbrewai.data.remote.QuizRequest
 import com.example.brainbrewai.data.remote.RetrofitInstance
-import com.example.brainbrewai.data.repository.HistoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class QuizViewModel : ViewModel() {
 
-    private val historyRepository =
-        HistoryRepository()
+    private val _quizContent =
+        MutableStateFlow(
+            QuizContent()
+        )
 
-    private val _allQuizzes =
-        MutableStateFlow<List<List<QuizQuestion>>>(emptyList())
-
-    val allQuizzes: StateFlow<List<List<QuizQuestion>>>
-            = _allQuizzes
-
-    private val _selectedQuizIndex =
-        MutableStateFlow(0)
-
-    val selectedQuizIndex: StateFlow<Int>
-            = _selectedQuizIndex
+    val quizContent: StateFlow<QuizContent>
+            = _quizContent
 
     private val _isLoading =
         MutableStateFlow(false)
@@ -39,7 +31,11 @@ class QuizViewModel : ViewModel() {
     val score: StateFlow<Int?>
             = _score
 
-    fun generateQuiz(topic: String) {
+
+    fun generateQuiz(
+        topic: String,
+        totalQuestions: Int
+    ) {
 
         if (topic.isBlank()) return
 
@@ -51,7 +47,10 @@ class QuizViewModel : ViewModel() {
 
                 val response =
                     RetrofitInstance.api.generateQuiz(
-                        QuizRequest(topic)
+                        QuizRequest(
+                            topic = topic,
+                            total_questions = totalQuestions
+                        )
                     )
 
                 if (response.isSuccessful) {
@@ -59,31 +58,12 @@ class QuizViewModel : ViewModel() {
                     val quizText =
                         response.body()?.quiz ?: ""
 
-                    val parsedQuiz =
+                    _quizContent.value =
                         QuizParser.parseQuizText(
                             quizText
                         )
 
-                    if (parsedQuiz.isNotEmpty()) {
-
-                        val updatedList =
-                            _allQuizzes.value +
-                                    listOf(parsedQuiz)
-
-                        _allQuizzes.value =
-                            updatedList
-
-                        _selectedQuizIndex.value =
-                            updatedList.lastIndex
-
-                        _score.value = null
-
-                        historyRepository.saveHistory(
-                            title = "$topic Quiz",
-                            content = quizText,
-                            type = "quiz"
-                        )
-                    }
+                    _score.value = null
                 }
 
             } catch (e: Exception) {
@@ -97,51 +77,50 @@ class QuizViewModel : ViewModel() {
         }
     }
 
-    fun selectQuiz(index: Int) {
-        _selectedQuizIndex.value = index
-        _score.value = null
-    }
 
     fun selectAnswer(
         questionIndex: Int,
         answer: String
     ) {
 
-        val quizIndex =
-            _selectedQuizIndex.value
+        val updatedMcqs =
+            _quizContent.value.mcqs
+                .toMutableList()
 
-        val updatedQuizzes =
-            _allQuizzes.value.toMutableList()
+        if (
+            questionIndex in updatedMcqs.indices
+        ) {
 
-        val currentQuiz =
-            updatedQuizzes.getOrNull(quizIndex)
-                ?.toMutableList()
-                ?: return
+            updatedMcqs[questionIndex] =
+                updatedMcqs[questionIndex].copy(
+                    selectedAnswer = answer
+                )
 
-        currentQuiz[questionIndex] =
-            currentQuiz[questionIndex].copy(
-                selectedAnswer = answer
-            )
-
-        updatedQuizzes[quizIndex] =
-            currentQuiz
-
-        _allQuizzes.value =
-            updatedQuizzes
+            _quizContent.value =
+                _quizContent.value.copy(
+                    mcqs = updatedMcqs
+                )
+        }
     }
+
 
     fun submitQuiz() {
 
-        val quiz =
-            _allQuizzes.value
-                .getOrNull(_selectedQuizIndex.value)
-                ?: return
+        val marks =
+            _quizContent.value.mcqs.count { question ->
 
-        _score.value =
-            quiz.count {
-                it.selectedAnswer == it.correctAnswer
+                val selectedOption =
+                    question.selectedAnswer
+                        ?.substringBefore(")")
+                        ?.trim()
+
+                selectedOption ==
+                        question.correctAnswer
             }
+
+        _score.value = marks
     }
+
 
     fun resetScore() {
         _score.value = null

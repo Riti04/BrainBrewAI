@@ -1,5 +1,6 @@
 package com.example.brainbrewai.presentation.auth.forgotpassword
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -20,10 +22,41 @@ fun ForgotPasswordScreen(
 ) {
 
     val viewModel: AuthViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
+
+    val uiState by
+    viewModel.uiState.collectAsState()
+
+    val context =
+        LocalContext.current
 
     var email by remember {
         mutableStateOf("")
+    }
+
+    LaunchedEffect(
+        uiState.isSuccess,
+        uiState.error
+    ) {
+
+        if (uiState.isSuccess) {
+
+            Toast.makeText(
+                context,
+                "Reset link sent to your email",
+                Toast.LENGTH_LONG
+            ).show()
+
+            navController.popBackStack()
+        }
+
+        uiState.error?.let {
+
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     Box(
@@ -37,6 +70,7 @@ fun ForgotPasswordScreen(
                 .fillMaxWidth()
                 .padding(24.dp)
                 .align(Alignment.Center),
+
             shape = CardRadius
         ) {
 
@@ -45,44 +79,79 @@ fun ForgotPasswordScreen(
             ) {
 
                 Text(
-                    "Forgot Password?",
-                    style = MaterialTheme.typography.headlineMedium
+                    text = "Forgot Password?",
+                    style =
+                        MaterialTheme.typography.headlineMedium
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
 
                 OutlinedTextField(
                     value = email,
+
                     onValueChange = {
                         email = it
                     },
+
                     label = {
                         Text("Email")
                     },
+
                     leadingIcon = {
                         Icon(
-                            Icons.Default.Email,
-                            null,
+                            imageVector =
+                                Icons.Default.Email,
+                            contentDescription = null,
                             tint = PrimaryPurple
                         )
                     },
+
                     shape = InputRadius,
-                    modifier = Modifier.fillMaxWidth()
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
 
                 Button(
                     onClick = {
-                        viewModel.resetPassword(email)
+                        viewModel.resetPassword(
+                            email
+                        )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
                     shape = InputRadius,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryPurple
-                    )
+
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor =
+                                PrimaryPurple
+                        )
                 ) {
-                    Text("Send Reset Link")
+
+                    if (uiState.isLoading) {
+
+                        CircularProgressIndicator(
+                            color = White,
+                            strokeWidth = 2.dp
+                        )
+
+                    } else {
+
+                        Text(
+                            "Send Reset Link"
+                        )
+                    }
                 }
             }
         }

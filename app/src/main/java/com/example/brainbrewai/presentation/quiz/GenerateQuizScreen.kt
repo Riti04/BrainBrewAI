@@ -16,6 +16,7 @@ import com.example.brainbrewai.ui.theme.PrimaryPurple
 import com.example.brainbrewai.ui.theme.PurpleGradient
 import com.example.brainbrewai.ui.theme.White
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenerateQuizScreen(
     navController: NavHostController,
@@ -26,11 +27,19 @@ fun GenerateQuizScreen(
         mutableStateOf("")
     }
 
-    val allQuizzes by
-    viewModel.allQuizzes.collectAsState()
+    var expanded by remember {
+        mutableStateOf(false)
+    }
 
-    val selectedQuizIndex by
-    viewModel.selectedQuizIndex.collectAsState()
+    val questionOptions =
+        listOf(5, 10, 15, 20)
+
+    var selectedQuestionCount by remember {
+        mutableIntStateOf(10)
+    }
+
+    val quizContent by
+    viewModel.quizContent.collectAsState()
 
     val isLoading by
     viewModel.isLoading.collectAsState()
@@ -38,182 +47,265 @@ fun GenerateQuizScreen(
     val score by
     viewModel.score.collectAsState()
 
-    val currentQuiz =
-        allQuizzes.getOrNull(
-            selectedQuizIndex
-        ) ?: emptyList()
-
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(PurpleGradient)
-            .statusBarsPadding()
-            .padding(16.dp)
+            .statusBarsPadding(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        Text(
-            text = "Generate Quiz",
-            style =
-                MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = White
-        )
+        item {
 
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-        OutlinedTextField(
-            value = topic,
-            onValueChange = {
-                topic = it
-            },
-            modifier =
-                Modifier.fillMaxWidth(),
-            label = {
-                Text("Enter topic")
-            }
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Button(
-            onClick = {
-                if (topic.isNotBlank()) {
-                    viewModel.generateQuiz(topic)
-                }
-            },
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor =
-                        PrimaryPurple
-                )
-        ) {
-            Text("Generate Quiz")
-        }
-
-        if (allQuizzes.isNotEmpty()) {
-
-            Spacer(
-                modifier =
-                    Modifier.height(16.dp)
-            )
-
-            ScrollableTabRow(
-                selectedTabIndex =
-                    selectedQuizIndex
-            ) {
-
-                allQuizzes.forEachIndexed { index, _ ->
-
-                    Tab(
-                        selected =
-                            selectedQuizIndex == index,
-
-                        onClick = {
-                            viewModel.selectQuiz(
-                                index
-                            )
-                        },
-
-                        text = {
-                            Text(
-                                "Quiz ${index + 1}"
-                            )
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(
-            modifier =
-                Modifier.height(12.dp)
-        )
-
-        if (isLoading) {
-            CircularProgressIndicator(
+            Text(
+                text = "Generate Quiz",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 color = White
             )
         }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
+        item {
+
+            OutlinedTextField(
+                value = topic,
+                onValueChange = {
+                    topic = it
+                },
+                modifier = Modifier.fillMaxWidth(),
+                label = {
+                    Text("Enter topic")
+                }
+            )
+        }
+
+        item {
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = !expanded
+                }
+            ) {
+
+                OutlinedTextField(
+                    value = "$selectedQuestionCount Questions",
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    label = {
+                        Text("Number of Questions")
+                    }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {
+                        expanded = false
+                    }
+                ) {
+
+                    questionOptions.forEach { count ->
+
+                        DropdownMenuItem(
+                            text = {
+                                Text("$count Questions")
+                            },
+                            onClick = {
+
+                                selectedQuestionCount = count
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
+
+            Button(
+                onClick = {
+                    viewModel.generateQuiz(
+                        topic = topic,
+                        totalQuestions = selectedQuestionCount
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryPurple
+                )
+            ) {
+
+                Text("Generate Quiz")
+            }
+        }
+
+        if (isLoading) {
+
+            item {
+
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    CircularProgressIndicator(
+                        color = White
+                    )
+                }
+            }
+        }
+
+        if (quizContent.mcqs.isNotEmpty()) {
+
+            item {
+
+                Text(
+                    text = "📝 MCQs",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = White
+                )
+            }
 
             itemsIndexed(
-                currentQuiz
+                quizContent.mcqs
             ) { index, question ->
 
                 QuizQuestionCard(
                     question = question,
+                    onAnswerSelected = { answer ->
 
-                    onAnswerSelected = {
                         viewModel.selectAnswer(
                             index,
-                            it
+                            answer
                         )
                     }
                 )
+            }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(12.dp)
+            item {
+
+                Button(
+                    onClick = {
+                        viewModel.submitQuiz()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryPurple
+                    )
+                ) {
+
+                    Text("Submit Quiz")
+                }
+            }
+        }
+
+        score?.let { marks ->
+
+            item {
+
+                Text(
+                    text =
+                        "Score: $marks / ${quizContent.mcqs.size}",
+                    color = White,
+                    style =
+                        MaterialTheme.typography.titleLarge
                 )
             }
         }
 
-        if (currentQuiz.isNotEmpty()) {
+        if (quizContent.shortAnswers.isNotEmpty()) {
 
-            Button(
-                onClick = {
-                    viewModel.submitQuiz()
-                },
+            item {
 
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor =
-                            PrimaryPurple
-                    )
-            ) {
-                Text("Submit Quiz")
+                Text(
+                    text = "✍ Short Answer Questions",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = White
+                )
             }
 
-            Spacer(
-                modifier =
-                    Modifier.height(12.dp)
-            )
+            items(
+                quizContent.shortAnswers.size
+            ) { index ->
 
-            Button(
-                onClick = {
-                    viewModel.generateQuiz(topic)
-                },
+                val item =
+                    quizContent.shortAnswers[index]
 
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
-                Text("Generate Another Quiz")
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+
+                        Text(
+                            text = item.first,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text = item.second
+                        )
+                    }
+                }
             }
         }
 
-        score?.let {
+        if (quizContent.interviewQuestions.isNotEmpty()) {
 
+            item {
+
+                Text(
+                    text = "🎤 Interview Questions",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = White
+                )
+            }
+
+            items(
+                quizContent.interviewQuestions.size
+            ) { index ->
+
+                val item =
+                    quizContent.interviewQuestions[index]
+
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+
+                        Text(
+                            text = item.first,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text = item.second
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
             Spacer(
-                modifier =
-                    Modifier.height(16.dp)
-            )
-
-            Text(
-                text =
-                    "Score: $it / ${currentQuiz.size}",
-                color = White,
-                style =
-                    MaterialTheme.typography.titleLarge
+                modifier = Modifier.height(80.dp)
             )
         }
     }

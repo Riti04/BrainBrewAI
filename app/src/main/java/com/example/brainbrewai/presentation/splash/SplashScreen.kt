@@ -30,10 +30,10 @@ fun SplashScreen(
 
         if (currentUser != null) {
 
+            // already logged in
             navController.navigate(
-                Screen.Welcome.route
+                Screen.Dashboard.route
             ) {
-
                 popUpTo(Screen.Splash.route) {
                     inclusive = true
                 }
@@ -41,10 +41,10 @@ fun SplashScreen(
 
         } else {
 
+            // first time user
             navController.navigate(
                 Screen.Welcome.route
             ) {
-
                 popUpTo(Screen.Splash.route) {
                     inclusive = true
                 }
@@ -54,25 +54,18 @@ fun SplashScreen(
 
     Column(
         modifier = Modifier.fillMaxSize(),
-
-        verticalArrangement =
-            Arrangement.Center,
-
-        horizontalAlignment =
-            Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Text(
             text = "BrainBrew AI",
-            style =
-                MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineLarge
         )
 
         Text(
-            text =
-                "Multi-Agent Study Assistant",
-            style =
-                MaterialTheme.typography.bodyLarge
+            text = "Multi-Agent Study Assistant",
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 }
